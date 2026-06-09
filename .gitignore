@@ -1,0 +1,25 @@
+# PyCharm
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# 其他
+weights/
+bge-small-zh-v1.5/
+**/*datas*/
+**/*model*/
+**/*outputs*/
+**/*checkpoints*/
+**/*docs*/
+.env*
+echo "AI_Model/" >> .gitignore
+*.gz
+*.zip
+*.mp4
+*ubyte
