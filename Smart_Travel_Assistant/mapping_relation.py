@@ -1,0 +1,68 @@
+# 常见城市与时区的映射关系
+CITY_TIMEZONE_MAP = {
+    # 中国城市 (UTC+8)
+    '北京': 'Asia/Shanghai',
+    '上海': 'Asia/Shanghai',
+    '广州': 'Asia/Shanghai',
+    '深圳': 'Asia/Shanghai',
+    '成都': 'Asia/Shanghai',
+    '杭州': 'Asia/Shanghai',
+    '重庆': 'Asia/Shanghai',
+    '西安': 'Asia/Shanghai',
+    '武汉': 'Asia/Shanghai',
+    '南京': 'Asia/Shanghai',
+    '天津': 'Asia/Shanghai',
+    '苏州': 'Asia/Shanghai',
+    '长沙': 'Asia/Shanghai',
+    '郑州': 'Asia/Shanghai',
+    '青岛': 'Asia/Shanghai',
+    '大连': 'Asia/Shanghai',
+    '昆明': 'Asia/Shanghai',
+    '厦门': 'Asia/Shanghai',
+
+    # 国际城市
+    '东京': 'Asia/Tokyo',
+    '大阪': 'Asia/Tokyo',
+    '首尔': 'Asia/Seoul',
+    '新加坡': 'Asia/Singapore',
+    '曼谷': 'Asia/Bangkok',
+    '河内': 'Asia/Ho_Chi_Minh',
+    '雅加达': 'Asia/Jakarta',
+    '马尼拉': 'Asia/Manila',
+    '吉隆坡': 'Asia/Kuala_Lumpur',
+    '迪拜': 'Asia/Dubai',
+    '孟买': 'Asia/Kolkata',
+    '新德里': 'Asia/Kolkata',
+    '莫斯科': 'Europe/Moscow',
+    '伦敦': 'Europe/London',
+    '巴黎': 'Europe/Paris',
+    '柏林': 'Europe/Berlin',
+    '罗马': 'Europe/Rome',
+    '马德里': 'Europe/Madrid',
+    '阿姆斯特丹': 'Europe/Amsterdam',
+    '布鲁塞尔': 'Europe/Brussels',
+    '纽约': 'America/New_York',
+    '洛杉矶': 'America/Los_Angeles',
+    '芝加哥': 'America/Chicago',
+    '旧金山': 'America/Los_Angeles',
+    '华盛顿': 'America/New_York',
+    '波士顿': 'America/New_York',
+    '西雅图': 'America/Los_Angeles',
+    '多伦多': 'America/Toronto',
+    '温哥华': 'America/Vancouver',
+    '悉尼': 'Australia/Sydney',
+    '墨尔本': 'Australia/Melbourne',
+    '奥克兰': 'Pacific/Auckland',
+}
+
+# 星期的隐射关系
+WEEK_MAP = {
+    'Monday': '星期一',
+    'Tuesday': '星期二',
+    'Wednesday': '星期三',
+    'Thursday': '星期四',
+    'Friday': '星期五',
+    'Saturday': '星期六',
+    'Sunday': '星期日'
+}
+
