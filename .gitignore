@@ -13,7 +13,6 @@ __pycache__/
 weights/
 bge-small-zh-v1.5/
 **/*datas*/
-**/*model*/
 **/*outputs*/
 **/*checkpoints*/
 **/*docs*/
