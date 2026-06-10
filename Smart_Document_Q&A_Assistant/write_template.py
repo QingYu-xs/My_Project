@@ -1,0 +1,107 @@
+﻿import os
+
+html = r"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能文档问答助手</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header"><h2>文档管理</h2></div>
+            <div class="upload-area">
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+                        </svg>
+                    </div>
+                    <p class="upload-text">拖拽文件到此处或点击上传</p>
+                    <p class="upload-hint">支持 PDF、Word、TXT 格式</p>
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden>
+                    <button class="upload-btn" id="uploadBtn">选择文件</button>
+                </div>
+                <div class="upload-progress" id="uploadProgress" style="display:none;">
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                    <p class="progress-text" id="progressText">正在处理...</p>
+                </div>
+            </div>
+            <div class="file-list">
+                <div class="file-list-header"><span>已上传文档</span><span class="file-count" id="fileCount">0</span></div>
+                <div class="file-items" id="fileItems"></div>
+            </div>
+            <div class="sidebar-actions">
+                <button class="action-btn" id="clearBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>清空数据
+                </button>
+            </div>
+        </aside>
+        <!-- 主区域 -->
+        <main class="main">
+            <header class="chat-header">
+                <h1>智能文档问答助手</h1>
+                <p class="chat-subtitle">上传文档后，即可基于文档内容进行智能问答</p>
+            </header>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message welcome">
+                    <div class="message-avatar assistant-avatar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                    </div>
+                    <div class="message-content">
+                        <p>你好！我是智能文档问答助手。</p>
+                        <p>请先在左侧上传 PDF、Word 或 TXT 文档，上传后我就能帮你分析文档内容并回答相关问题。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="questionInput" class="question-input" placeholder="输入你的问题..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-hint">按 Enter 发送，Shift + Enter 换行</div>
+            </div>
+            <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">正在思考...</p>
+            </div>
+        </main>
+    </div>
+<script>
+const fileInput=document.getElementById("fileInput"),uploadBtn=document.getElementById("uploadBtn"),uploadBox=document.getElementById("uploadBox"),uploadProgress=document.getElementById("uploadProgress"),progressFill=document.getElementById("progressFill"),progressText=document.getElementById("progressText"),fileItems=document.getElementById("fileItems"),fileCount=document.getElementById("fileCount"),chatMessages=document.getElementById("chatMessages"),questionInput=document.getElementById("questionInput"),sendBtn=document.getElementById("sendBtn"),loadingOverlay=document.getElementById("loadingOverlay"),clearBtn=document.getElementById("clearBtn");
+let uploadedFiles=[];
+questionInput.addEventListener("input",function(){this.style.height="auto",this.style.height=Math.min(this.scrollHeight,120)+"px"});
+questionInput.addEventListener("keydown",function(e){e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),sendQuestion())});
+uploadBtn.addEventListener("click",()=>fileInput.click());
+uploadBox.addEventListener("click",()=>fileInput.click());
+uploadBox.addEventListener("dragover",e=>{e.preventDefault(),uploadBox.classList.add("dragover")});
+uploadBox.addEventListener("dragleave",()=>{uploadBox.classList.remove("dragover")});
+uploadBox.addEventListener("drop",e=>{e.preventDefault(),uploadBox.classList.remove("dragover"),e.dataTransfer.files.length>0&&uploadFile(e.dataTransfer.files[0])});
+fileInput.addEventListener("change",()=>{fileInput.files.length>0&&(uploadFile(fileInput.files[0]),fileInput.value="")});
+function uploadFile(f){const e=f.name.split(".").pop().toLowerCase();if(!["pdf","docx","txt"].includes(e))return void showError("不支持的文件格式");const t=new FormData;t.append("file",f),uploadBox.style.display="none",uploadProgress.style.display="block",progressFill.style.width="30%",progressText.textContent="正在上传...",fetch("/upload",{method:"POST",body:t}).then(r=>r.json()).then(d=>{progressFill.style.width="100%",setTimeout(()=>{uploadProgress.style.display="none",uploadBox.style.display="block",progressFill.style.width="0%"},500),d.status==="success"?(addFileItem(f.name,d.chunks),addMessage("assistant","\\u2705 \\u5df2\\u5904\\u7406\\u6587\\u6863 \\u201c"+f.name+"\\u201d\\uff0c\\u5171 "+d.chunks+" \\u4e2a\\u6587\\u672c\\u5757\\u3002\\u4f60\\u53ef\\u4ee5\\u5f00\\u59cb\\u63d0\\u95ee\\u4e86\\uff01"),updateSendButton()):showError(d.message)}).catch(e=>{uploadProgress.style.display="none",uploadBox.style.display="block",showError("上传失败: "+e.message)})}
+function sendQuestion(){const e=questionInput.value.trim();if(!e)return;addMessage("user",e),questionInput.value="",questionInput.style.height="auto",sendBtn.disabled=!0,loadingOverlay.style.display="flex",fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:e})}).then(r=>r.json()).then(d=>{loadingOverlay.style.display="none",d.status==="success"?(d.sources&&d.sources.length>0&&(d.answer+="\\n\\n\ud83d\udcce \\u53c2\\u8003\\u6587\\u6863: "+d.sources.join(", ")),addMessage("assistant",d.answer)):addMessage("assistant","\\u274c "+d.answer),updateSendButton()}).catch(e=>{loadingOverlay.style.display="none",addMessage("assistant","\\u274c \\u8bf7\\u6c42\\u5931\\u8d25: "+e.message),updateSendButton()})}
+function addMessage(e,t){const n=document.createElement("div");n.className="message "+e;const o=document.createElement("div");o.className="message-avatar "+e+"-avatar",o.innerHTML=e==="user"?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';const r=document.createElement("div");r.className="message-content",r.textContent=t,n.appendChild(o),n.appendChild(r),chatMessages.appendChild(n),chatMessages.scrollTop=chatMessages.scrollHeight}
+function addFileItem(e,t){uploadedFiles.push(e);const n=document.createElement("div");n.className="file-item",n.innerHTML='<div class="file-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><div class="file-info"><span class="file-name">'+e+'</span><span class="file-chunks">'+t+' 块</span></div>',fileItems.appendChild(n),fileCount.textContent=uploadedFiles.length}
+function updateSendButton(){fetch("/status").then(r=>r.json()).then(d=>{sendBtn.disabled=!d.has_documents}).catch(()=>{})}
+function showError(e){const t=document.createElement("div");t.className="message assistant",t.innerHTML='<div class="message-avatar assistant-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div><div class="message-content">\\u274c '+e+'</div>',chatMessages.appendChild(t),chatMessages.scrollTop=chatMessages.scrollHeight}
+clearBtn.addEventListener("click",()=>{confirm("确定要清空所有数据和对话历史吗？")&&fetch("/clear",{method:"POST"}).then(r=>r.json()).then(()=>{chatMessages.innerHTML='<div class="message welcome"><div class="message-avatar assistant-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div><div class="message-content"><p>你好！我是智能文档问答助手。</p><p>请先在左侧上传 PDF、Word 或 TXT 文档，上传后我就能帮你分析文档内容并回答相关问题。</p></div></div>',fileItems.innerHTML="",uploadedFiles=[],fileCount.textContent="0",sendBtn.disabled=!0})});
+updateSendButton();
+</script>
+</body>
+</html>
+"""
+
+with open(os.path.join('templates', 'index.html'), 'w', encoding='utf-8') as f:
+    f.write(html)
+print('Template written OK')
