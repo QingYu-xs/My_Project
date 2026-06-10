@@ -13,6 +13,7 @@ BASE_URL = os.environ.get('BASE_URL')
 MODEL = os.environ.get('MODEL_NAME')
 TAVILY_API_KEY = os.environ.get('TAVILY_API_KEY')
 
+# 偏好标签
 PREFERENCE_LABELS = {
     "经典": "经典地标、历史古迹、必打卡景点",
     "美食": "特色美食街、当地餐厅、小吃夜市",
@@ -106,7 +107,8 @@ def generate_itinerary(destination, days, preferences):
             e2 = resp.rfind("}")
             if s != -1 and e2 != -1:
                 return json.loads(resp[s:e2 + 1])
-        except:
+        except Exception as e:
+            print(f"解析 JSON 时发生错误：{e}")
             pass
         return {"error": f"生成行程失败: {e}", "raw": resp}
 

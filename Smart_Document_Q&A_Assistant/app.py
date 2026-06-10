@@ -1,4 +1,3 @@
-
 import os
 import uuid
 from pathlib import Path
@@ -12,21 +11,7 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = Config.MAX_UPLOAD_SIZE
 app.secret_key = "smart-doc-qa-secret-key"
 
-# 检查 Ollama 状态
-def check_ollama():
-    try:
-        import urllib.request
-        req = urllib.request.Request("http://localhost:11434/api/tags")
-        resp = urllib.request.urlopen(req, timeout=2)
-        import json
-        data = json.loads(resp.read())
-        models = [m["name"] for m in data.get("models", [])]
-        return {"running": True, "models": models}
-    except Exception:
-        return {"running": False, "models": []}
-
-ollama_status = check_ollama()
-rag_service = RAGService() if ollama_status["running"] else None
+rag_service = RAGService()
 
 
 @app.route("/")
@@ -36,9 +21,6 @@ def index():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    if not ollama_status["running"]:
-        return jsonify({"status": "error", "message": "Ollama 未运行，请先启动 Ollama 服务"})
-
     if "file" not in request.files:
         return jsonify({"status": "error", "message": "请选择文件"})
 
@@ -60,9 +42,6 @@ def upload():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    if not ollama_status["running"]:
-        return jsonify({"status": "error", "answer": "Ollama 未运行，请先启动 Ollama 服务"})
-
     data = request.get_json()
     question = data.get("question", "").strip()
 
@@ -75,25 +54,20 @@ def ask():
 
 @app.route("/history", methods=["GET"])
 def history():
-    if not ollama_status["running"]:
-        return jsonify({"history": []})
     return jsonify({"history": rag_service.get_history()})
 
 
 @app.route("/clear", methods=["POST"])
 def clear():
-    if rag_service:
-        rag_service.clear_history()
+    rag_service.clear_history()
     return jsonify({"status": "success", "message": "已清除所有数据"})
 
 
 @app.route("/status", methods=["GET"])
 def status():
     return jsonify({
-        "ollama_running": ollama_status["running"],
-        "ollama_models": ollama_status["models"],
-        "has_documents": rag_service.vector_store.has_documents() if rag_service else False,
-        "document_count": rag_service.vector_store.document_count() if rag_service else 0,
+        "has_documents": rag_service.vector_store.has_documents(),
+        "document_count": rag_service.vector_store.document_count(),
     })
 
 
@@ -103,14 +77,10 @@ if __name__ == "__main__":
     Path("templates").mkdir(parents=True, exist_ok=True)
     Path("static").mkdir(parents=True, exist_ok=True)
 
-    ollama_status = check_ollama()
-    if ollama_status["running"]:
-        print(f"✅ Ollama 已连接，可用模型: {ollama_status['models']}")
-        rag_service = RAGService()
-    else:
-        print("⚠️  未检测到 Ollama 服务，请启动 Ollama 后使用")
-        print("   下载安装: https://ollama.com")
-        print("   启动后拉取模型: ollama pull nomic-embed-text && ollama pull qwen2.5:7b")
+    print(f"\u2705 API: {Config.DEFAULT_API_TYPE}")
+    print(f"   LLM: {Config.API_KEYS[Config.DEFAULT_API_TYPE]['llm_model']}")
+    print(f"   Embedding: {Config.API_KEYS[Config.DEFAULT_API_TYPE]['embedding_model']}")
+    print(f"   启动 Flask: http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")
 
     app.run(
         host=Config.FLASK_HOST,

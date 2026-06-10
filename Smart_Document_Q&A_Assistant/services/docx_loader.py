@@ -44,10 +44,5 @@ class SimpleDocxLoader:
 
 
 def get_docx_loader(file_path: str):
-    """Return the best available docx loader."""
-    try:
-        from langchain_community.document_loaders import Docx2txtLoader
-        return Docx2txtLoader(file_path)
-    except ImportError:
-        pass
+    """Return a docx loader using our stdlib-based SimpleDocxLoader."""
     return SimpleDocxLoader(file_path)

@@ -1,13 +1,11 @@
-﻿"""
+"""
 FAISS vector store service.
 Handles building, saving, loading and searching the vector index.
 """
 import os
 from pathlib import Path
-from typing import List, Optional
 
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import OllamaEmbeddings
 from langchain_core.documents import Document
 
 
@@ -15,13 +13,10 @@ FAISS_INDEX_DIR = Path(__file__).resolve().parent.parent / "faiss_index"
 
 
 class VectorStoreService:
-    """Manage FAISS vector store with local Ollama embeddings."""
+    """Manage FAISS vector store with remote API embeddings."""
 
-    def __init__(self, embedding_model="nomic-embed-text", ollama_base_url="http://localhost:11434"):
-        self.embedding_model = OllamaEmbeddings(
-            model=embedding_model,
-            base_url=ollama_base_url,
-        )
+    def __init__(self, embeddings):
+        self.embeddings = embeddings
         self.vector_store = None
         self._load_index()
 
@@ -32,7 +27,7 @@ class VectorStoreService:
             try:
                 self.vector_store = FAISS.load_local(
                     str(FAISS_INDEX_DIR),
-                    self.embedding_model,
+                    self.embeddings,
                     allow_dangerous_deserialization=True,
                 )
             except Exception:
@@ -46,7 +41,7 @@ class VectorStoreService:
     def add_documents(self, documents):
         """Add documents to the vector store."""
         if self.vector_store is None:
-            self.vector_store = FAISS.from_documents(documents, self.embedding_model)
+            self.vector_store = FAISS.from_documents(documents, self.embeddings)
         else:
             self.vector_store.add_documents(documents)
         self.save_index()

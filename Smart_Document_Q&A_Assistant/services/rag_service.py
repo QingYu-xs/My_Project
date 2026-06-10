@@ -5,13 +5,13 @@ Coordinates document processing and Q&A.
 import os
 from pathlib import Path
 
-from langchain_ollama import ChatOllama
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 
 from services.document_loader import DocumentLoaderService
 from services.vector_store import VectorStoreService
 from services.docx_loader import get_docx_loader
+from models.llm_factory import Llm_Factory
 from config.settings import Config
 
 
@@ -35,20 +35,22 @@ RAG_PROMPT = ChatPromptTemplate.from_messages([
 class RAGService:
     """RAG 服务：处理文档上传、检索、问答"""
 
-    def __init__(self):
-        ollama_base_url = getattr(Config, "OLLAMA_BASE_URL", "http://localhost:11434")
-        embedding_model = getattr(Config, "OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
-        llm_model = getattr(Config, "OLLAMA_LLM_MODEL", "qwen2.5:7b")
+    def __init__(self, api_type=None):
+        api_type = api_type or Config.DEFAULT_API_TYPE
+        api_key = Config.get_api_key()
 
-        self.vector_store = VectorStoreService(
-            embedding_model=embedding_model,
-            ollama_base_url=ollama_base_url,
+        if api_type not in Config.API_TYPES:
+            api_type = "qwen"
+
+        self.embeddings = Llm_Factory.create_embedding(
+            api_type=api_type,
+            api_key=os.environ.get("QWEN_API_KEY") or api_key,
         )
-        self.llm = ChatOllama(
-            model=llm_model,
-            base_url=ollama_base_url,
-            temperature=0.7,
+        self.llm = Llm_Factory.create_llm(
+            api_type=api_type,
+            api_key=os.environ.get("QWEN_API_KEY") or api_key,
         )
+        self.vector_store = VectorStoreService(embeddings=self.embeddings)
         self.document_loader = DocumentLoaderService()
         self.chat_history = []
 

@@ -28,6 +28,7 @@ class Config:
     }
 
     API_TYPES = ['qwen', 'Qwen', 'zhipu', 'deepseek', 'DeepSeek']
+    DEFAULT_API_TYPE = 'qwen'
 
     # 文档快大小
     DOCUMENT_SIZE_CHUK = 500
@@ -47,17 +48,6 @@ class Config:
         return os.environ.get('Qwen_API_KEY')
 
 
-if __name__ == '__main__':
-    config = Config()
-    api_key = config.get_api_key()
-    print(api_key)
-
-
-
-    # Ollama 配置
-    OLLAMA_BASE_URL = "http://localhost:11434"
-    OLLAMA_EMBEDDING_MODEL = "nomic-embed-text"
-    OLLAMA_LLM_MODEL = "qwen2.5:7b"
 
     # Flask 配置
     FLASK_HOST = "127.0.0.1"
@@ -66,3 +56,11 @@ if __name__ == '__main__':
 
     MAX_UPLOAD_SIZE_MB = 50
     MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+if __name__ == '__main__':
+    config = Config()
+    api_key = config.get_api_key()
+    print(api_key)
+
+
+
