@@ -1,41 +1,46 @@
 """
-Simple docx text extractor using only stdlib.
-Falls back when python-docx is not available.
+纯标准库 .docx 文本提取器
+.docx 文件本质是 ZIP 压缩包，内部包含 word/document.xml，
+本模块通过 zipfile + xml.etree.ElementTree 直接解析 XML，
+无需安装 python-docx 依赖。
 """
 import zipfile
 import xml.etree.ElementTree as ET
-from pathlib import Path
+
+from langchain_core.documents import Document
 
 
 class SimpleDocxLoader:
-    """Extract plain text from .docx files using zipfile + XML parsing."""
+    """使用纯标准库解析 .docx 文件并提取文本"""
 
     def __init__(self, file_path: str):
         self.file_path = str(file_path)
 
     def load(self):
-        """Return list of LangChain-style Document objects."""
-        try:
-            from langchain_core.documents import Document
-        except ImportError:
-            Document = None
-
+        """加载 .docx 文件，返回包含一个 Document 对象的列表"""
         text = self._extract_text()
-        if Document is None:
-            return [{"page_content": text, "metadata": {"source": self.file_path}}]
         return [Document(page_content=text, metadata={"source": self.file_path})]
 
     def _extract_text(self) -> str:
-        """Extract plain text from a .docx file (which is a ZIP of XML)."""
-        ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+        """从 word/document.xml 中提取所有段落文本"""
         paragraphs = []
         with zipfile.ZipFile(self.file_path) as z:
-            xml_content = z.read("word/document.xml")
+            xml_content = z.read("word/document.xml")           # 读取 XML 内容
             root = ET.fromstring(xml_content)
-            for para in root.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p"):
+
+            # 遍历所有 <w:p>（段落）标签
+            for para in root.iter(
+                "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p"
+            ):
                 texts = []
-                for run in para.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"):
-                    for t in run.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t"):
+                # 遍历段落中的 <w:r>（文本片段）标签
+                for run in para.iter(
+                    "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+                ):
+                    # 提取 <w:t>（文本内容）标签中的文字
+                    for t in run.iter(
+                        "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t"
+                    ):
                         if t.text:
                             texts.append(t.text)
                 if texts:
@@ -44,5 +49,5 @@ class SimpleDocxLoader:
 
 
 def get_docx_loader(file_path: str):
-    """Return a docx loader using our stdlib-based SimpleDocxLoader."""
+    """返回 SimpleDocxLoader 实例"""
     return SimpleDocxLoader(file_path)
