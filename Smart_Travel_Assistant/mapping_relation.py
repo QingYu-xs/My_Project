@@ -1,4 +1,5 @@
 # 常见城市与时区的映射关系
+# 用于根据城市名获取对应的时区，支持全球 50+ 城市
 CITY_TIMEZONE_MAP = {
     # 中国城市 (UTC+8)
     '北京': 'Asia/Shanghai',
@@ -55,7 +56,7 @@ CITY_TIMEZONE_MAP = {
     '奥克兰': 'Pacific/Auckland',
 }
 
-# 星期的隐射关系
+# 英文星期到中文的映射，用于展示本地化的日期信息
 WEEK_MAP = {
     'Monday': '星期一',
     'Tuesday': '星期二',
@@ -65,4 +66,3 @@ WEEK_MAP = {
     'Saturday': '星期六',
     'Sunday': '星期日'
 }
-

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -427,7 +427,7 @@
 </head>
 <body>
 <div class="header">
-    <h1>智旅 AI . 智能行程规划</h1>
+    <h1>途灵 AI . 智能行程规划</h1>
     <p>输入目的地和天数，一键生成专属旅行行程</p>
 </div>
 <div class="container">
@@ -473,112 +473,126 @@
             </button>
         </div>
     </div>
-    <div class="footer">智旅 AI . Smart Travel Assistant</div>
+    <div class="footer">途灵 AI . Smart Travel Assistant</div>
 </div>
 <script>
-    document.getElementById("dec").onclick = function () {
-        var v = parseInt(document.getElementById("days").value) || 1;
-        if (v > 1) document.getElementById("days").value = v - 1
-    };
-    document.getElementById("inc").onclick = function () {
-        var v = parseInt(document.getElementById("days").value) || 1;
-        if (v < 30) document.getElementById("days").value = v + 1
-    };
-    document.querySelectorAll(".pref-tag").forEach(function (t) {
-        t.onclick = function () {
-            this.classList.toggle("active")
-        }
+document.getElementById("dec").onclick = function () {
+    var v = parseInt(document.getElementById("days").value) || 1;
+    if (v > 1) document.getElementById("days").value = v - 1
+};
+document.getElementById("inc").onclick = function () {
+    var v = parseInt(document.getElementById("days").value) || 1;
+    if (v < 30) document.getElementById("days").value = v + 1
+};
+document.querySelectorAll(".pref-tag").forEach(function (t) {
+    t.onclick = function () {
+        this.classList.toggle("active")
+    }
+});
+document.getElementById("dest").onkeydown = function (e) {
+    if (e.key == "Enter") generate()
+};
+document.getElementById("genBtn").onclick = generate;
+
+async function generate() {
+    var dest = document.getElementById("dest").value.trim();
+    var days = parseInt(document.getElementById("days").value) || 3;
+    var prefs = [];
+    document.querySelectorAll(".pref-tag.active").forEach(function (t) {
+        prefs.push(t.dataset.p)
     });
-    document.getElementById("dest").onkeydown = function (e) {
-        if (e.key == "Enter") generate()
-    };
-    document.getElementById("genBtn").onclick = generate;
-
-    async function generate() {
-        var dest = document.getElementById("dest").value.trim();
-        var days = parseInt(document.getElementById("days").value) || 3;
-        var prefs = [];
-        document.querySelectorAll(".pref-tag.active").forEach(function (t) {
-            prefs.push(t.dataset.p)
-        });
-        var err = document.getElementById("errMsg");
-        err.classList.remove("show");
-        if (!dest) {
-            err.textContent = "请输入目的地";
-            err.classList.add("show");
-            return
-        }
-        if (days < 1 || days > 30) {
-            err.textContent = "出行天数请设置在 1-30 天之间";
-            err.classList.add("show");
-            return
-        }
-        var btn = document.getElementById("genBtn");
-        btn.classList.add("loading");
-        btn.disabled = true;
-        var res = document.getElementById("results");
-        var ic = document.getElementById("itinCard");
-        ic.style.display = "none";
-        res.classList.remove("show");
-        document.getElementById("itinContent").innerHTML = '<div class="loading-box"><div class="sp"></div><span>AI正在规划行程...</span></div>';
-        ic.style.display = "block";
-        res.classList.add("show");
-        try {
-            var r = await fetch("/generate", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({destination: dest, days: days, preferences: prefs})
-            });
-            var d = await r.json();
-            if (!d.success) {
-                err.textContent = d.error || "生成失败";
-                err.classList.add("show");
-                res.classList.remove("show");
-                return
-            }
-            renderItin(d.itinerary_data);
-        } catch (e) {
-            err.textContent = "网络错误: " + e.message;
-            err.classList.add("show");
-            res.classList.remove("show")
-        } finally {
-            btn.classList.remove("loading");
-            btn.disabled = false
-        }
+    var err = document.getElementById("errMsg");
+    err.classList.remove("show");
+    if (!dest) {
+        err.textContent = "请输入目的地";
+        err.classList.add("show");
+        return
     }
-
-    function renderItin(data) {
-        var h = document.getElementById("itinContent");
-        if (!data || data.error) {
-            h.innerHTML = "<p style=color:red>" + (data && data.error || "失败") + "</p>";
+    if (days < 1 || days > 30) {
+        err.textContent = "出行天数请设置在 1-30 天之间";
+        err.classList.add("show");
+        return
+    }
+    var btn = document.getElementById("genBtn");
+    btn.classList.add("loading");
+    btn.disabled = true;
+    var res = document.getElementById("results");
+    var ic = document.getElementById("itinCard");
+    ic.style.display = "none";
+    res.classList.remove("show");
+    document.getElementById("itinContent").innerHTML = '<div class="loading-box"><div class="sp"></div><span>AI正在规划行程...</span></div>';
+    ic.style.display = "block";
+    res.classList.add("show");
+    try {
+        var r = await fetch("/generate", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({destination: dest, days: days, preferences: prefs})
+        });
+        var d = await r.json();
+        if (!d.success) {
+            err.textContent = d.error || "生成失败";
+            err.classList.add("show");
+            res.classList.remove("show");
             return
         }
-        var it = data.itinerary || [];
-        var html = "<h4 style=margin-bottom:12px>" + data.destination + " " + data.days + "天行程规划</h4>";
-        if (data.preferences && data.preferences.length) html += '<p style="color:#6E6E73;font-size:14px;margin-bottom:16px">偏好: ' + data.preferences.join(" ") + "</p>";
-        var colors = ["#4B6EFF", "#34C759", "#FF9500", "#AF52DE", "#FF3B30", "#FF6BB5"];
-        it.forEach(function (day, i) {
-            var sp = day.spots || [];
-            var c = colors[i % colors.length];
-            html += '<div class="day-card" style="border-left-color:' + c + '">';
-            html += '<div class="day-title">第' + (day.day || i + 1) + "天" + (day.date ? " . " + day.date : "") + "</div>";
-            html += '<div class="day-theme">' + ((day.theme) || "") + "</div>";
-            if (day.summary) html += '<div class="day-summary">' + day.summary + "</div>";
-            sp.forEach(function (s, j) {
-                html += '<div class="spot-item"><div class="spot-idx" style="background:' + c + '">' + (j + 1) + '</div>';
-                html += '<div class="spot-body"><div class="spot-name">' + s.name + "</div>";
-                if (s.description) html += '<div class="spot-desc">' + s.description + "</div>";
-                html += '<div class="spot-meta">';
-                if (s.category) html += '<span class="spot-cat cat-' + s.category + '">' + s.category + "</span>";
-                if (s.duration) html += "<span>" + s.duration + "</span>";
-                html += "</div>";
-                if (s.tips) html += '<div style="font-size:12px;color:#6E6E73;margin-top:4px">' + s.tips + "</div>";
-                html += "</div></div>";
-            });
+        renderItin(d.itinerary_data);
+    } catch (e) {
+        err.textContent = "网络错误: " + e.message;
+        err.classList.add("show");
+        res.classList.remove("show")
+    } finally {
+        btn.classList.remove("loading");
+        btn.disabled = false
+    }
+}
+
+function renderItin(data) {
+    var h = document.getElementById("itinContent");
+    if (!data || data.error) {
+        h.innerHTML = "<p style=color:red>" + (data && data.error || "失败") + "</p>";
+        return
+    }
+    var it = data.itinerary || [];
+    // 构造 HTML
+    var html = "<h4 style=margin-bottom:12px>" + data.destination + " " + data.days + "天行程规划</h4>";
+    if (data.preferences && data.preferences.length) {
+        html += '<p style="color:#6E6E73;font-size:14px;margin-bottom:16px">偏好: ' + data.preferences.join(" ") + "</p>";
+    }
+    // 天气信息卡片
+    if (data.weather) {
+        var w = data.weather;
+        html += '<div style="background:linear-gradient(135deg,#EBF5FF,#E8F8F5);border-radius:10px;padding:14px 18px;margin-bottom:16px;border-left:4px solid #4B6EFF">';
+        html += '<div style="font-size:14px;font-weight:600;margin-bottom:6px;color:#1D1D1F">当前天气</div>';
+        if (w.date) html += '<span style="font-size:13px;color:#6E6E73;margin-right:12px">' + w.date + "</span>";
+        if (w.weather) html += '<span style="font-size:15px;margin-right:12px">' + w.weather + "</span>";
+        if (w.temperature) html += '<span style="font-size:15px;font-weight:600;color:#FF6B35">' + w.temperature + "</span>";
+        if (w.tip) html += '<div style="font-size:13px;color:#6E6E73;margin-top:6px;line-height:1.5">' + w.tip + "</div>";
+        html += "</div>";
+    }
+    var colors = ["#4B6EFF", "#34C759", "#FF9500", "#AF52DE", "#FF3B30", "#FF6BB5"];
+    it.forEach(function (day, i) {
+        var sp = day.spots || [];
+        var c = colors[i % colors.length];
+        html += '<div class="day-card" style="border-left-color:' + c + '">';
+        html += '<div class="day-title">第' + (day.day || i + 1) + "天" + (day.date ? " . " + day.date : "") + "</div>";
+        html += '<div class="day-theme">' + ((day.theme) || "") + "</div>";
+        if (day.summary) html += '<div class="day-summary">' + day.summary + "</div>";
+        sp.forEach(function (s, j) {
+            html += '<div class="spot-item"><div class="spot-idx" style="background:' + c + '">' + (j + 1) + '</div>';
+            html += '<div class="spot-body"><div class="spot-name">' + s.name + "</div>";
+            if (s.description) html += '<div class="spot-desc">' + s.description + "</div>";
+            html += '<div class="spot-meta">';
+            if (s.category) html += '<span class="spot-cat cat-' + s.category + '">' + s.category + "</span>";
+            if (s.duration) html += "<span>" + s.duration + "</span>";
             html += "</div>";
+            if (s.tips) html += '<div style="font-size:12px;color:#6E6E73;margin-top:4px">' + s.tips + "</div>";
+            html += "</div></div>";
         });
-        h.innerHTML = html;
-    }
+        html += "</div>";
+    });
+    h.innerHTML = html;
+}
 </script>
 </body>
 </html>

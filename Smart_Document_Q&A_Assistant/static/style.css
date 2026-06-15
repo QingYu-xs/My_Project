@@ -27,6 +27,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Micr
 .file-info{display:flex;flex-direction:column;min-width:0}
 .file-name{color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .file-chunks{font-size:11px;color:#98a2b3}
+.file-del{background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;color:#98a2b3;transition:color 0.2s;line-height:1}
+.file-del:hover{color:#dc2626}
 .sidebar-status{padding:12px 4px;display:flex;justify-content:center}
 .status-item{display:flex;align-items:center;gap:6px;font-size:13px;color:#475467;background:#f0f3ff;padding:6px 14px;border-radius:6px;border:1px solid #e0e7ff}
 .status-item strong{color:#4f6ef7;font-size:15px}

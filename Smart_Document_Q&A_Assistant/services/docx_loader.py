@@ -25,7 +25,7 @@ class SimpleDocxLoader:
         """从 word/document.xml 中提取所有段落文本"""
         paragraphs = []
         with zipfile.ZipFile(self.file_path) as z:
-            xml_content = z.read("word/document.xml")           # 读取 XML 内容
+            xml_content = z.read("word/document.xml")  # 读取 XML 内容
             root = ET.fromstring(xml_content)
 
             # 遍历所有 <w:p>（段落）标签

@@ -95,6 +95,15 @@ def list_files():
     return jsonify({"files": rag_service.get_files()})
 
 
+@app.route("/delete", methods=["POST"])
+def delete_file():
+    data = request.get_json()
+    uuid_name = data.get("uuid_name", "")
+    if not uuid_name:
+        return jsonify({"status": "error", "message": "参数缺失"})
+    count = rag_service.delete_file(uuid_name)
+    return jsonify({"status": "success", "message": f"已删除 {count} 个向量块", "removed": count})
+
 @app.route("/favicon.ico")
 def favicon():
     return "", 204
@@ -111,7 +120,7 @@ if __name__ == "__main__":
     print(f"\u2705 API: {Config.DEFAULT_API_TYPE}")
     print(f"   LLM: {Config.API_KEYS[Config.DEFAULT_API_TYPE]['llm_model']}")
     print(f"   Embedding: {Config.API_KEYS[Config.DEFAULT_API_TYPE]['embedding_model']}")
-    print(f"   启动 Flask: http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")
+    print(f"   启动 Flask: http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")  # type ignore
 
     app.run(
         host=Config.FLASK_HOST,

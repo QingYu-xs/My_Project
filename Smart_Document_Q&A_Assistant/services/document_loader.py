@@ -24,12 +24,12 @@ class DocumentLoaderService:
         self.splitter = RecursiveCharacterTextSplitter(
             separators=[
                 "\n# ", "\n## ", "\n### ", "\n#### ",   # Markdown 标题（最高优先级）
-                "\n`\n",                                     # 代码块
-                "\n\n",                                        # 段落
-                "\n",                                          # 行
-                ". ",                                           # 英文句号
-                " ",                                            # 空格
-                "",                                             # 字符级别（兜底）
+                "\n`\n",   # 代码块
+                "\n\n",   # 段落
+                "\n",   # 行
+                ". ",  # 英文句号
+                " ",   # 空格
+                "",    # 字符级别（兜底）
             ],
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,

@@ -15,7 +15,7 @@ class QwenEmbeddings:
     """针对通义千问 Dashscope 的 Embedding 适配器。
     
     主要解决：LangChain 的 OpenAIEmbeddings 发送列表格式 {input: [...]]}，
-    但 Dashscope 接口不接受列表，必须一条文本调一次。
+    但 通义千问的 Dashscope 接口不接受列表，必须一条文本调一次。
     """
 
     def __init__(self, api_key: str, model: str = "text-embedding-v4", base_url: str = None):
@@ -23,13 +23,13 @@ class QwenEmbeddings:
         self.model = model
         self.base_url = (base_url.rstrip("/") if base_url
                          else "https://dashscope.aliyuncs.com/compatible-mode/v1")
-        self._url = f"{self.base_url}/embeddings"          # Embedding API 地址
+        self._url = f"{self.base_url}/embeddings"    # Embedding API 地址
 
     def _call_api(self, text: str) -> List[float]:
         """对单条文本调用 Embedding API，返回向量"""
         payload = json.dumps({
             "model": self.model,
-            "input": text                                    # 单条文本，非数组
+            "input": text  # 单条文本，非数组
         }).encode("utf-8")
 
         req = urllib.request.Request(
@@ -77,11 +77,11 @@ class QwenEmbeddings:
             return []
         return self._call_api(text)
 
-    def __call__(self, input):
+    def __call__(self, _input):
         """支持直接被调用（LangChain FAISS 内部可能 call embedding 对象）
         - str   -> embed_query
         - list  -> embed_documents
         """
         if isinstance(input, str):
-            return self.embed_query(input)
-        return self.embed_documents(input)
+            return self.embed_query(_input)
+        return self.embed_documents(_input)

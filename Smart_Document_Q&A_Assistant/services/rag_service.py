@@ -113,6 +113,7 @@ class RAGService:
                 "status": "success",
                 "message": f"文件 {orig} 已处理，共 {len(chunks)} 个文本块",
                 "chunks": len(chunks),
+                "uuid_name": uuid_key,
             }
 
         except Exception as e:
@@ -160,6 +161,15 @@ class RAGService:
 
         except Exception as e:
             return {"status": "error", "answer": "回答生成失败: " + str(e), "sources": []}
+
+    def delete_file(self, uuid_name):
+        file_path = str(os.path.join(str(UPLOAD_DIR), uuid_name))
+        removed = self.vector_store.delete_by_source(file_path)
+        self.file_registry.remove(uuid_name)
+        disk_path = UPLOAD_DIR / uuid_name
+        if disk_path.exists():
+            disk_path.unlink()
+        return removed
 
     def get_files(self):
         """返回已注册的文件列表 [(uuid, 原始名称), ...]"""

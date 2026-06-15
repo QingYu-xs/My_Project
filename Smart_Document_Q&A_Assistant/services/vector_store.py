@@ -55,6 +55,33 @@ class VectorStoreService:
         return self.vector_store.similarity_search(query, k=k)
 
     # 工具方法
+    def delete_by_source(self, source_path):
+        import numpy as np
+        source_str = str(source_path)
+        if self.vector_store is None:
+            return 0
+        ids_to_delete = [
+            doc_id for doc_id, doc in self.vector_store.docstore._dict.items()
+            if doc.metadata.get("source") == source_str
+        ]
+        if not ids_to_delete:
+            return 0
+        faiss_ids = np.array([
+            fid for fid, did in self.vector_store.index_to_docstore_id.items()
+            if did in ids_to_delete
+        ], dtype=np.int64)
+        if len(faiss_ids) > 0:
+            self.vector_store.index.remove_ids(faiss_ids)
+        for did in ids_to_delete:
+            if did in self.vector_store.docstore._dict:
+                del self.vector_store.docstore._dict[did]
+        self.vector_store.index_to_docstore_id = {
+            fid: did for fid, did in self.vector_store.index_to_docstore_id.items()
+            if did not in ids_to_delete
+        }
+        self.save_index()
+        return len(ids_to_delete)
+
     def clear(self):
         """清空索引并删除所有持久化文件"""
         self.vector_store = None
