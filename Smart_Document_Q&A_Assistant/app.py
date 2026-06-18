@@ -120,7 +120,7 @@ if __name__ == "__main__":
     print(f"\u2705 API: {Config.DEFAULT_API_TYPE}")
     print(f"   LLM: {Config.API_KEYS[Config.DEFAULT_API_TYPE]['llm_model']}")
     print(f"   Embedding: {Config.API_KEYS[Config.DEFAULT_API_TYPE]['embedding_model']}")
-    print(f"   启动 Flask: http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")  # type ignore
+    print(f"   启动 Flask: http://{Config.FLASK_HOST}:{Config.FLASK_PORT}")
 
     app.run(
         host=Config.FLASK_HOST,

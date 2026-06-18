@@ -82,6 +82,6 @@ class QwenEmbeddings:
         - str   -> embed_query
         - list  -> embed_documents
         """
-        if isinstance(input, str):
+        if isinstance(_input, str):
             return self.embed_query(_input)
         return self.embed_documents(_input)

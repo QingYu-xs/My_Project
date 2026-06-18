@@ -121,46 +121,77 @@ class RAGService:
 
     # 问答
     def ask(self, question, k=4):
-        """用户提问 → 语义检索 → 拼接上下文 → LLM 生成回答"""
+        """???? ? ???? ? ????? ? LLM ????"""
         if not self.vector_store.has_documents():
             return {
                 "status": "error",
-                "answer": "请先上传文档，再进行提问。",
+                "answer": "?????????????",
                 "sources": [],
             }
 
+        import traceback as _tb
         try:
-            # Step 1: 从 FAISS 中检索最相似的 k 个文档块
-            docs = self.vector_store.similarity_search(question, k=k)
+            # Step 1: ? FAISS ??????? k ????
+            try:
+                docs = self.vector_store.similarity_search(question, k=k)
+            except Exception as e1:
+                _tb.print_exc()
+                return {"status": "error", "answer": "????: " + str(e1), "sources": []}
             if not docs:
                 return {
                     "status": "success",
-                    "answer": "文档中没有找到相关信息。",
+                    "answer": "????????????",
                     "sources": [],
                 }
 
-            # Step 2: 将检索结果拼接为上下文
+            # Step 2: ?????
             context = "\n\n".join([doc.page_content for doc in docs])
-            prompt = RAG_PROMPT.format_messages(context=context, question=question)
 
-            # Step 3: 调用 LLM 生成回答
-            response = self.llm.invoke(prompt)
-            answer = response.content if hasattr(response, "content") else str(response)
+            # Step 3: ?????? prompt ????? list[BaseMessage] ????????
+            system_msg = SYSTEM_PROMPT.format(context=context)
+            full_prompt = system_msg + "\n\n????: " + question
 
-            # Step 4: 收集来源文件名（从注册表转为原始名称），供前端展示
-            sources = list({
-                self.file_registry.get_original_name(os.path.basename(doc.metadata.get("source", "")))
-                for doc in docs if doc.metadata.get("source")
-            })
+            try:
+                response = self.llm.invoke(full_prompt)
+                answer = response.content if hasattr(response, "content") else str(response)
+            except Exception as e3:
+                _tb.print_exc()
+                # ?????? openai ???
+                try:
+                    from openai import OpenAI
+                    openai_api_key = Config.get_api_key()
+                    api_cfg = Config.API_KEYS[Config.DEFAULT_API_TYPE]
+                    client = OpenAI(api_key=openai_api_key, base_url=api_cfg["base_url"])
+                    resp = client.chat.completions.create(
+                        model=api_cfg["llm_model"],
+                        messages=[
+                            {"role": "system", "content": system_msg},
+                            {"role": "user", "content": question}
+                        ]
+                    )
+                    answer = resp.choices[0].message.content
+                except Exception as e3b:
+                    _tb.print_exc()
+                    return {"status": "error", "answer": "LLM????: " + str(e3), "sources": []}
 
-            # 记录到对话历史
+            # Step 4: ???????
+            try:
+                sources = list({
+                    self.file_registry.get_original_name(os.path.basename(doc.metadata.get("source", "")))
+                    for doc in docs if doc.metadata.get("source")
+                })
+            except Exception:
+                sources = []
+
+            # ???????
             self.chat_history.append({"role": "user", "content": question})
             self.chat_history.append({"role": "assistant", "content": answer})
 
             return {"status": "success", "answer": answer, "sources": sources}
 
         except Exception as e:
-            return {"status": "error", "answer": "回答生成失败: " + str(e), "sources": []}
+            _tb.print_exc()
+            return {"status": "error", "answer": "??????: " + str(e), "sources": []}
 
     def delete_file(self, uuid_name):
         file_path = str(os.path.join(str(UPLOAD_DIR), uuid_name))

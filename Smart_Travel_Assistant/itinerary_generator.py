@@ -167,8 +167,9 @@ def generate_itinerary(destination, days, preferences):
 请直接输出 JSON 格式的完整行程规划，并将天气信息填入 weather 字段。"""
 
     try:
+        # 第一级，直接解析 JSON
         resp = llm.generate(usr, sys)
-
+        # 第二级， 提取 markdown 代码块
         m = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', resp)
         js = m.group(1) if m else resp
         result = json.loads(js.strip())
@@ -177,6 +178,7 @@ def generate_itinerary(destination, days, preferences):
         return result
     except Exception as e:
         try:
+            # 第三级，找第一个 { 和最后一个 }
             s = resp.find("{")
             e2 = resp.rfind("}")
             if s != -1 and e2 != -1:
@@ -190,6 +192,9 @@ def generate_itinerary(destination, days, preferences):
 
 
 def format_itinerary_text(data):
+    """
+    格式化行程为 Markdown
+    """
     if "error" in data:
         return f"{data['error']}"
     dest = data.get("destination", "")
@@ -236,3 +241,4 @@ if __name__ == "__main__":
         print(f"失败: {d['error']}")
     else:
         print(format_itinerary_text(d))
+
