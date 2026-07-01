@@ -51,6 +51,6 @@ def health():
 
 
 if __name__ == "__main__":
-    # 启动 Flask 开发服务器
+    # 启动服务器
     app.run(host="0.0.0.0", port=5700, debug=False, threaded=True)
 

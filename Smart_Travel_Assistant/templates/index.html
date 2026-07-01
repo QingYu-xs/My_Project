@@ -476,14 +476,17 @@
     <div class="footer">途灵 AI . Smart Travel Assistant</div>
 </div>
 <script>
+    // 点击标签
 document.getElementById("dec").onclick = function () {
     var v = parseInt(document.getElementById("days").value) || 1;
     if (v > 1) document.getElementById("days").value = v - 1
 };
+// 点击生成按钮
 document.getElementById("inc").onclick = function () {
     var v = parseInt(document.getElementById("days").value) || 1;
     if (v < 30) document.getElementById("days").value = v + 1
 };
+// 点击生成按钮
 document.querySelectorAll(".pref-tag").forEach(function (t) {
     t.onclick = function () {
         this.classList.toggle("active")
